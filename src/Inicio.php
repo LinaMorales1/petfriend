@@ -102,6 +102,7 @@ if (isset($_GET['like']) && is_numeric($_GET['like'])) {
       <button class="btn btn-sm btn-secondary m-3" onclick="toggleSidebar()">☰ Menú</button>
       <div id="main-content" class="flex-grow-1">
         <div class="container py-4">
+          
           <h3 class="mb-4">Publicaciones recientes</h3>
           <?php foreach ($publicaciones as $pub): ?>
             <div class="post mb-4">

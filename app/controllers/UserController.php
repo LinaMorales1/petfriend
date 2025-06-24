@@ -4,9 +4,12 @@ class UserController extends Controller
     public function index()
     {
         $this->validateSession('usuario');
+        $postModel = $this->model('Post');
+        $posts = $postModel->getAll();
 
         $this->view('user/dashboard', [
-            'title' => 'Inicio - Pet Friend'
+            'title' => 'Inicio - Pet Friend',
+            'publicaciones' => $posts,
         ], 'layouts/user');
     }
 
@@ -24,6 +27,15 @@ class UserController extends Controller
             'usuario' => $user,
             'publicaciones' => $posts,
             'title' => 'Mi perfil - Pet Friend'
+        ], 'layouts/user');
+    }
+
+    public function publicaciones()
+    {
+        $this->validateSession('usuario');
+
+        $this->view('user/publicaciones', [
+            'title' => 'Publicaciones'
         ], 'layouts/user');
     }
 
@@ -52,5 +64,46 @@ class UserController extends Controller
 
         $this->model('User')->updateFoto($id, $nombreArchivo);
         echo "ok:" . $nombreArchivo;
+    }
+
+    public function create()
+    {
+        $this->validateSession('usuario');
+        header('Content-Type: application/json');
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+                $titulo = trim($_POST['titulo'] ?? '');
+                $contenido = trim($_POST['contenido'] ?? '');
+                $usuarioId = $_SESSION['ID_USUARIO'];
+                $imagenNombre = null;
+
+                if (!$titulo || !$contenido) {
+                    echo json_encode(['success' => false, 'message' => 'Título y contenido son obligatorios.']);
+                    return;
+                }
+
+
+                if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
+                    $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+                    $imagenNombre = uniqid('post_') . '.' . $ext;
+                    move_uploaded_file($_FILES['imagen']['tmp_name'], "../public/uploads/posts/". $imagenNombre);
+                }
+                
+                $data = [
+                    'usuario_id' => $usuarioId,
+                    'titulo' => $titulo,
+                    'contenido' => $contenido,
+                    'imagen' => $imagenNombre,
+                ];
+
+                $postModel = $this->model('Post');
+                $post = $postModel->create($data);
+
+                echo json_encode(['success' => true, 'post' => $post]);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
     }
 }
