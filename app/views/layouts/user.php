@@ -20,7 +20,7 @@ function isActive($route, $currentUrl)
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#submenuAdopciones" role="button" aria-expanded="false" aria-controls="submenuAdopciones">Adopciones</a>
                 <div class="collapse ps-3" id="submenuAdopciones">
                     <a class="nav-link text-white" href="/petfriend/public/user/publicaciones">Publicar</a>
-                    <a class="nav-link text-white" href="estado_publicaciones.php">Estado</a>
+                    <a class="nav-link text-white" href="/petfriend/public/user/estado">Estado</a>
                 </div>
             </li>
             <li class="nav-item"><a class="nav-link text-white" href="bandeja_mensajes.php">Mensajes</a></li>

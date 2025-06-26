@@ -87,9 +87,9 @@ class UserController extends Controller
                 if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
                     $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
                     $imagenNombre = uniqid('post_') . '.' . $ext;
-                    move_uploaded_file($_FILES['imagen']['tmp_name'], "../public/uploads/posts/". $imagenNombre);
+                    move_uploaded_file($_FILES['imagen']['tmp_name'], "../public/uploads/posts/" . $imagenNombre);
                 }
-                
+
                 $data = [
                     'usuario_id' => $usuarioId,
                     'titulo' => $titulo,
@@ -105,5 +105,45 @@ class UserController extends Controller
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
+    }
+    public function estado()
+    {
+        $this->validateSession('usuario');
+
+        $id_usuario = $_SESSION['ID_USUARIO'];
+        $estado = $_GET['estado'] ?? 'EN CURSO';
+        $mensaje_exito = $_GET['deleted'] ?? false;
+
+        $postModel = $this->model('Post');
+
+
+
+        $postModel->eliminarCompletadas();
+        $publicaciones = $postModel->getByUserAndEstado($id_usuario, $estado);
+
+        $this->view('user/estado_publicaciones', [
+            'publicaciones' => $publicaciones,
+            'estado' => $estado,
+            'mensaje_exito' => $mensaje_exito,
+            'title' => 'Mis Publicaciones'
+        ], 'layouts/user');
+    }
+
+    public function actualizarEstado()
+    {
+        $this->validateSession('usuario');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id'] ?? null;
+            $nuevoEstado = $_POST['estado'] ?? null;
+
+            if ($id && $nuevoEstado) {
+                $this->model('Post')->updateEstado($id, $nuevoEstado);
+            }
+        }
+
+        $estado = $_GET['estado'] ?? 'EN CURSO';
+        header("Location: /petfriend/public/user/estado?estado=" . urlencode($estado));
+        exit;
     }
 }
