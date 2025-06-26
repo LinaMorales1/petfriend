@@ -23,10 +23,10 @@ function isActive($route, $currentUrl)
                     <a class="nav-link text-white" href="/petfriend/public/user/estado">Estado</a>
                 </div>
             </li>
-            <li class="nav-item"><a class="nav-link text-white" href="bandeja_mensajes.php">Mensajes</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/bandeja_mensajes">Mensajes</a></li>
 
-            <li class="nav-item"><a class="nav-link text-white" href="configuracion.php">Configuración</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="acerca_terminos.php">Términos</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/configuracion">Configuración</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/acerca_terminos">Términos</a></li>
             <a class="nav-link text-white" href="/petfriend/public/auth/logout">Cerrar sesión</a>
         </ul>
     </div>

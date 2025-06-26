@@ -103,4 +103,43 @@ class Post extends Model
         $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
         $stmt->execute([$estado, $id]);
     }
+    // Actualizar datos personales
+    public function updateProfile($id_usuario, $data)
+    {
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($data['actualizar_perfil'])) {
+            $stmt = $this->getDB()->prepare("UPDATE usuarios SET NOMBRES = ?, APELLIDOS = ?, CIUDAD = ?, EDAD = ?, CORREO = ? WHERE ID_USUARIO = ?");
+            $stmt->execute([
+                $data['nombre'],
+                $data['apellidos'],
+                $data['ciudad'],
+                $data['edad'],
+                $data['correo'],
+                $id_usuario
+            ]);
+            $mensaje = "Perfil actualizado correctamente.";
+        }
+    }
+
+    // Cambiar contraseña
+    public function password($id_usuario, $nueva)
+    {
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['cambiar_password'])) {
+            $nueva = $_POST['nueva_password'];
+            $confirmar = $_POST['confirmar_password'];
+
+            if ($nueva === $confirmar && strlen($nueva) >= 8) {
+                $stmt = $this->getDB()->prepare("UPDATE usuarios SET CONTRASEÑA = ? WHERE ID_USUARIO = ?");
+                $stmt->execute([$nueva, $id_usuario]);
+                $mensaje = "Contraseña cambiada correctamente.";
+            } else {
+                $mensaje = "Error: Las contraseñas no coinciden o no cumplen con los requisitos.";
+            }
+        }
+    }
+    // Actualiza la foto de perfil del usuario
+    public function updateFoto($id, $nombreArchivo)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE usuarios SET FOTO = ? WHERE ID_USUARIO = ?");
+        $stmt->execute([$nombreArchivo, $id]);
+    }
 }

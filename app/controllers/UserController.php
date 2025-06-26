@@ -146,4 +146,29 @@ class UserController extends Controller
         header("Location: /petfriend/public/user/estado?estado=" . urlencode($estado));
         exit;
     }
+    public function configuracion()
+    {
+        $this->validateSession('usuario');
+        $userModel = $this->model('User');
+        $user = $userModel->getById($_SESSION['ID_USUARIO']);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nombres = trim($data['nombres'] ?? '');
+            $apellidos = trim($data['apellidos'] ?? '');
+            $email = trim($data['email'] ?? '');
+
+            if ($nombres && $apellidos && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $userModel->configracion($_SESSION['ID_USUARIO'], $nombres, $apellidos, $email);
+                header("Location: /petfriend/public/user/configuracion");
+                exit;
+            } else {
+                echo "Datos inválidos.";
+            }
+        }
+
+        $this->view('user/configuracion', [
+            'usuario' => $user,
+            'title' => 'Configuración - Pet Friend'
+        ], 'layouts/user');
+    }
 }

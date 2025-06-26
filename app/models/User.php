@@ -47,4 +47,26 @@ class User extends Model
         $stmt = $this->getDB()->prepare("UPDATE usuarios SET FOTO = ? WHERE ID_USUARIO = ?");
         $stmt->execute([$nombreArchivo, $id]);
     }
+
+    // Actualiza los datos personales del usuario
+    public function updatePerfil($id, $data)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE usuarios SET NOMBRES = ?, APELLIDOS = ?, CIUDAD = ?, EDAD = ?, CORREO = ? WHERE ID_USUARIO = ?");
+        return $stmt->execute([
+            $data['nombre'],
+            $data['apellidos'],
+            $data['ciudad'],
+            $data['edad'],
+            $data['correo'],
+            $id
+        ]);
+    }
+
+    // Cambia la contraseña del usuario
+    public function actualizarPassword($id_usuario, $nueva)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE usuarios SET CONTRASEÑA = ? WHERE ID_USUARIO = ?");
+        return $stmt->execute([$nueva, $id_usuario]);
+    }
 }
+
