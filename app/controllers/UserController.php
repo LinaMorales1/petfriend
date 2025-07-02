@@ -22,7 +22,6 @@ class UserController extends Controller
         $user = $userModel->getById($_SESSION['ID_USUARIO']);
         $posts = $postModel->getByUser($_SESSION['ID_USUARIO'], null, "COMPLETADA");
 
-
         $this->view('user/profile', [
             'usuario' => $user,
             'publicaciones' => $posts,
@@ -34,100 +33,110 @@ class UserController extends Controller
     {
         $this->validateSession('usuario');
 
+        $mascotas = $this->model('Mascota')->getAll(); // 🔁 cambia aquí
+
         $this->view('user/publicaciones', [
-            'title' => 'Publicaciones'
+            'title' => 'Publicaciones',
+            'mascotas' => $mascotas
         ], 'layouts/user');
     }
 
-    public function updatePhoto()
-    {
-        $this->validateSession('usuario');
 
-        $id = $_SESSION['ID_USUARIO'];
-
-        if (!isset($_FILES['nueva_foto']) || $_FILES['nueva_foto']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(400);
-            echo "Archivo inválido";
-            return;
-        }
-
-        $archivo = $_FILES['nueva_foto'];
-        $ext = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-        $nombreArchivo = $id . '.' . $ext;
-        $rutaDestino = "../public/uploads/perfiles/" . $nombreArchivo;
-
-        if (!move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
-            http_response_code(500);
-            echo "Error al mover el archivo.";
-            return;
-        }
-
-        $this->model('User')->updateFoto($id, $nombreArchivo);
-        echo "ok:" . $nombreArchivo;
-    }
 
     public function create()
     {
         $this->validateSession('usuario');
         header('Content-Type: application/json');
+
         try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
                 $titulo = trim($_POST['titulo'] ?? '');
                 $contenido = trim($_POST['contenido'] ?? '');
+                $mascotaId = intval($_POST['mascota_id'] ?? 0);
                 $usuarioId = $_SESSION['ID_USUARIO'];
+                $ciudad = $_SESSION['CIUDAD'] ?? 'Desconocida';
                 $imagenNombre = null;
 
-                if (!$titulo || !$contenido) {
-                    echo json_encode(['success' => false, 'message' => 'Título y contenido son obligatorios.']);
+                // 🔍 Validaciones
+                if (!$titulo) {
+                    echo json_encode(['success' => false, 'message' => '❌ Debes escribir un título.']);
                     return;
                 }
 
+                if (!$contenido) {
+                    echo json_encode(['success' => false, 'message' => '❌ Debes escribir una descripción.']);
+                    return;
+                }
 
+                if (!$mascotaId) {
+                    echo json_encode(['success' => false, 'message' => '❌ Debes seleccionar una mascota.']);
+                    return;
+                }
+
+                // ✅ Subida de imagen (opcional)
                 if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
                     $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
                     $imagenNombre = uniqid('post_') . '.' . $ext;
                     move_uploaded_file($_FILES['imagen']['tmp_name'], "../public/uploads/posts/" . $imagenNombre);
                 }
 
+                // ✅ Crear publicación
                 $data = [
                     'usuario_id' => $usuarioId,
                     'titulo' => $titulo,
                     'contenido' => $contenido,
                     'imagen' => $imagenNombre,
+                    'ciudad' => $ciudad,
+                    'mascota_id' => $mascotaId
                 ];
 
                 $postModel = $this->model('Post');
                 $post = $postModel->create($data);
 
-                echo json_encode(['success' => true, 'post' => $post]);
+                // ✅ Crear solicitud de adopción con estado = 1 (EN CURSO)
+                $estadoId = 1; // EN CURSO
+
+                $adopcionModel = $this->model('Adopcion');
+                $adopcionModel->crearSolicitud([
+                    'id_usuario' => $usuarioId,
+                    'id_mascota' => $mascotaId,
+                    'ciudad' => $ciudad,
+                    'fecha' => date('Y-m-d'),
+                    'estado' => $estadoId // 👈 ahora es un número
+                ]);
+
+                echo json_encode([
+                    'success' => true,
+                    'post' => $post,
+                    'message' => '✅ Publicación creada correctamente.'
+                ]);
             }
         } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            echo json_encode([
+                'success' => false,
+                'message' => '❌ Error: ' . $e->getMessage()
+            ]);
         }
     }
+
     public function estado()
     {
         $this->validateSession('usuario');
 
         $id_usuario = $_SESSION['ID_USUARIO'];
         $estado = $_GET['estado'] ?? 'EN CURSO';
-        $mensaje_exito = $_GET['deleted'] ?? false;
 
         $postModel = $this->model('Post');
-
-
-
-        $postModel->eliminarCompletadas();
+        $postModel->eliminarCompletadas(); // limpia publicaciones con estado COMPLETADA
         $publicaciones = $postModel->getByUserAndEstado($id_usuario, $estado);
 
         $this->view('user/estado_publicaciones', [
             'publicaciones' => $publicaciones,
             'estado' => $estado,
-            'mensaje_exito' => $mensaje_exito,
             'title' => 'Mis Publicaciones'
         ], 'layouts/user');
     }
+
 
     public function actualizarEstado()
     {
@@ -146,6 +155,7 @@ class UserController extends Controller
         header("Location: /petfriend/public/user/estado?estado=" . urlencode($estado));
         exit;
     }
+
     public function configuracion()
     {
         $this->validateSession('usuario');
@@ -168,6 +178,67 @@ class UserController extends Controller
 
         $this->view('user/configuracion', [
             'usuario' => $user,
+            'title' => 'Configuración - Pet Friend'
+        ], 'layouts/user');
+    }
+
+    public function actualizarPerfil()
+    {
+        $this->validateSession('usuario');
+
+        $userModel = $this->model('User');
+        $user = $userModel->getById($_SESSION['ID_USUARIO']);
+        $mensaje = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_perfil'])) {
+            $id = $_SESSION['ID_USUARIO'];
+            $nombre = trim($_POST['nombre']);
+            $apellidos = trim($_POST['apellidos']);
+            $ciudad = trim($_POST['ciudad']);
+            $edad = intval($_POST['edad']);
+            $correo = trim($_POST['correo']);
+
+            if ($nombre && $apellidos && $correo) {
+                $userModel->actualizarPerfil($id, $nombre, $apellidos, $ciudad, $edad, $correo);
+                $mensaje = "✅ Perfil actualizado correctamente.";
+                $user = $userModel->getById($_SESSION['ID_USUARIO']);
+            } else {
+                $mensaje = "❌ Por favor completa todos los campos obligatorios.";
+            }
+        }
+
+        $this->view('user/configuracion', [
+            'usuario' => $user,
+            'mensaje' => $mensaje,
+            'title' => 'Configuración - Pet Friend'
+        ], 'layouts/user');
+    }
+
+    public function cambiarContrasena()
+    {
+        $this->validateSession('usuario');
+
+        $mensajePassword = null;
+        $userModel = $this->model('User');
+        $user = $userModel->getById($_SESSION['ID_USUARIO']);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cambiar_password'])) {
+            $id = $_SESSION['ID_USUARIO'];
+            $nuevaContrasena = trim($_POST['nueva_password']);
+            $confirmarContrasena = trim($_POST['confirmar_password']);
+
+            if ($nuevaContrasena && $nuevaContrasena === $confirmarContrasena && strlen($nuevaContrasena) >= 8) {
+                $nuevaContrasenaHash = password_hash($nuevaContrasena, PASSWORD_DEFAULT);
+                $userModel->cambiarContrasena($id, $nuevaContrasenaHash);
+                $mensajePassword = "✅ Contraseña actualizada correctamente.";
+            } else {
+                $mensajePassword = "❌ La contraseña es inválida o no coincide.";
+            }
+        }
+
+        $this->view('user/configuracion', [
+            'usuario' => $user,
+            'mensajePassword' => $mensajePassword,
             'title' => 'Configuración - Pet Friend'
         ], 'layouts/user');
     }

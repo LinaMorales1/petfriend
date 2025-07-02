@@ -48,20 +48,25 @@ class Post extends Model
         $db = $this->getDB();
 
         $stmt = $db->prepare("
-            INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen)
-            VALUES (?, ?, ?, ?)
-        ");
+        INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen, mascota_id)
+        VALUES (?, ?, ?, ?, ?)
+
+    ");
         $stmt->execute([
             $data['usuario_id'],
             $data['titulo'],
             $data['contenido'],
             $data['imagen'],
+            $data['mascota_id']
         ]);
+
 
         // Retorna los datos de la publicación incluyendo su ID generado
         $data['id'] = $db->lastInsertId();
+
         return $data;
     }
+
 
     // Actualiza título, contenido e imagen de una publicación existente
     public function update($id, $data)
@@ -103,43 +108,32 @@ class Post extends Model
         $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
         $stmt->execute([$estado, $id]);
     }
-    // Actualizar datos personales
-    public function updateProfile($id_usuario, $data)
+
+    public function getAllWithUser()
     {
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($data['actualizar_perfil'])) {
-            $stmt = $this->getDB()->prepare("UPDATE usuarios SET NOMBRES = ?, APELLIDOS = ?, CIUDAD = ?, EDAD = ?, CORREO = ? WHERE ID_USUARIO = ?");
-            $stmt->execute([
-                $data['nombre'],
-                $data['apellidos'],
-                $data['ciudad'],
-                $data['edad'],
-                $data['correo'],
-                $id_usuario
-            ]);
-            $mensaje = "Perfil actualizado correctamente.";
-        }
+        $sql = "SELECT p.*, u.NOMBRES, u.APELLIDOS 
+            FROM publicaciones p
+            JOIN usuarios u ON p.usuario_id = u.ID_USUARIO
+            ORDER BY p.id DESC";
+
+        return $this->getDB()->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Cambiar contraseña
-    public function password($id_usuario, $nueva)
+    public function actualizarEstado($id, $estado)
     {
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['cambiar_password'])) {
-            $nueva = $_POST['nueva_password'];
-            $confirmar = $_POST['confirmar_password'];
+        $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
+        return $stmt->execute([$estado, $id]);
+    }
+    public function getById($id)
+    {
+        $stmt = $this->getDB()->prepare("SELECT * FROM publicaciones WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function updateEstadoByMascota($mascotaId, $estado)
+{
+    $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE mascota_id = ?");
+    return $stmt->execute([$estado, $mascotaId]);
+}
 
-            if ($nueva === $confirmar && strlen($nueva) >= 8) {
-                $stmt = $this->getDB()->prepare("UPDATE usuarios SET CONTRASEÑA = ? WHERE ID_USUARIO = ?");
-                $stmt->execute([$nueva, $id_usuario]);
-                $mensaje = "Contraseña cambiada correctamente.";
-            } else {
-                $mensaje = "Error: Las contraseñas no coinciden o no cumplen con los requisitos.";
-            }
-        }
-    }
-    // Actualiza la foto de perfil del usuario
-    public function updateFoto($id, $nombreArchivo)
-    {
-        $stmt = $this->getDB()->prepare("UPDATE usuarios SET FOTO = ? WHERE ID_USUARIO = ?");
-        $stmt->execute([$nombreArchivo, $id]);
-    }
 }

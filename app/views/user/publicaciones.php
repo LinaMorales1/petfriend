@@ -12,6 +12,16 @@
           <label for="imagen" class="form-label">Imagen de la mascota</label>
           <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*">
       </div>
+      <div class="mb-3">
+          <label for="mascota_id" class="form-label">Selecciona una mascota</label>
+          <select name="mascota_id" id="mascota_id" class="form-select" required>
+              <option value="">-- Selecciona una mascota --</option>
+              <?php foreach ($mascotas as $m): ?>
+                  <option value="<?= $m['ID_MASCOTAS'] ?>"><?= htmlspecialchars($m['ESPECIE']) ?> (ID <?= $m['ID_MASCOTAS'] ?>)</option>
+              <?php endforeach; ?>
+          </select>
+      </div>
+
       <button type="submit" class="btn btn-primary">Publicar</button>
       <a href="/petfriend/public/user" class="btn btn-secondary">Cancelar</a>
       <div id="mensaje" class="mt-2 text-muted"></div>

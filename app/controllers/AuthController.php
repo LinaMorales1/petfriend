@@ -29,7 +29,7 @@ class AuthController extends Controller
             ];
 
             // Asignar rol por lógica de backend
-            $data['rol'] = 'usuario';
+            $data['rol'] = $_POST['rol'] ?? 'usuario';
 
             // Validación básica
             foreach ($data as $campo => $valor) {
@@ -69,6 +69,9 @@ class AuthController extends Controller
 
             $userModel = $this->model('User');
             $usuario = $userModel->findByCorreo($correo);
+            // Verificar si el usuario existe y la contraseña es correcta
+            // Si no existe, devolver error
+            $contrasena = trim($contrasena);
 
             if (!$usuario || !password_verify($contrasena, $usuario['CONTRASEÑA'])) {
                 echo json_encode(['success' => false, 'message' => 'Correo o contraseña incorrectos']);

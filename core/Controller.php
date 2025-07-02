@@ -12,7 +12,7 @@ class Controller
         // Extraer variables para uso dentro de las vistas
         extract($data);
 
-        // URL actual
+        // Obtener la URL actual (para activar menús, etc.)
         $currentUrl = $_GET['url'] ?? 'home';
 
         // Capturar el contenido de la vista
@@ -21,17 +21,23 @@ class Controller
         $viewContent = ob_get_clean();
 
         if ($layout) {
+            // Si se especificó un layout (ej: layouts/user o layouts/admin)
             ob_start();
             require_once "../app/views/{$layout}.php";
             $content = ob_get_clean();
         } else {
+            // Si no hay layout, usar el contenido de la vista directamente
             $content = $viewContent;
         }
 
-        // Incluir el layout principal
+        // Renderizar la vista final
         require_once "../app/views/layouts/main.php";
     }
 
+    /**
+     * Validar sesión iniciada y opcionalmente el rol del usuario
+     * @param string|null $requiredRole  Ej: 'admin' o 'usuario'
+     */
     protected function validateSession($requiredRole = null)
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -43,12 +49,15 @@ class Controller
             exit;
         }
 
-        if ($requiredRole && $_SESSION['ROL'] !== $requiredRole) {
+        if ($requiredRole && (!isset($_SESSION['ROL']) || $_SESSION['ROL'] !== $requiredRole)) {
             header('Location: /petfriend/public/auth/login');
             exit;
         }
     }
 
+    /**
+     * Redirigir si el usuario ya inició sesión según su rol
+     */
     protected function redirectIfLoggedIn()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -66,3 +75,4 @@ class Controller
         }
     }
 }
+

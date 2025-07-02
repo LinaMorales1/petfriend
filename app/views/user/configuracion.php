@@ -1,10 +1,26 @@
-<div class="row">
+<div class="container">
 
-  <!-- Formulario de Perfil -->
-  <div class="col-md-7">
+  <!-- 🔘 Navegación por pestañas -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link active" href="#" onclick="mostrarSeccion('perfil', event)">Perfil</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" onclick="mostrarSeccion('contrasena', event)">Contraseña</a>
+    </li>
+  </ul>
+
+  <!-- ✅ Sección 1: Perfil -->
+  <div id="perfil" class="seccion activa">
     <h4>Datos de Perfil</h4>
-    <form method="POST">
-      <!-- Este campo oculto se usa para identificar que se está enviando el formulario de perfil -->
+
+    <?php if (!empty($mensaje)): ?>
+      <div class="alert alert-info">
+        <?= htmlspecialchars($mensaje) ?>
+      </div>
+    <?php endif; ?>
+
+    <form method="POST" action="/petfriend/public/user/actualizarPerfil">
       <input type="hidden" name="actualizar_perfil" value="1">
 
       <div class="mb-3">
@@ -36,11 +52,17 @@
     </form>
   </div>
 
-  <!-- Formulario de Contraseña -->
-  <div class="col-md-5">
+  <!-- ✅ Sección 2: Contraseña -->
+  <!-- ✅ Sección 2: Contraseña -->
+<div id="contrasena" class="seccion" style="display: none;">
     <h4>Restablecer contraseña</h4>
-    <form method="POST">
-      <!-- Este campo oculto se usa para identificar que se está enviando el formulario de cambio de contraseña -->
+    <?php if (!empty($mensajePassword)): ?>
+  <div class="alert alert-info">
+    <?= htmlspecialchars($mensajePassword) ?>
+  </div>
+<?php endif; ?>
+
+    <form method="POST" action="/petfriend/public/user/cambiarContrasena">
       <input type="hidden" name="cambiar_password" value="1">
 
       <div class="mb-3">
@@ -55,15 +77,15 @@
 
       <button type="submit" class="btn btn-danger">Cambiar contraseña</button>
 
-      <!-- Reglas para guiar al usuario -->
-      <h4 class="mt-4">PARA CAMBIAR TU CONTRASEÑA</h4>
-      <ul class="password-rules">
-        <li>Minimo 8 caracteres</li>
-        <li>Debe tener una mayúscula</li>
-        <li>Debe tener mínimo 1 número</li>
-        <li>Puede tener caracteres especiales</li>
+      <h5 class="mt-3">Recomendaciones:</h5>
+      <ul>
+        <li>8 caracteres mínimo</li>
+        <li>Al menos 1 mayúscula</li>
+        <li>Al menos 1 número</li>
       </ul>
     </form>
   </div>
 
 </div>
+
+

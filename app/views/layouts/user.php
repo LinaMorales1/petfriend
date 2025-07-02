@@ -21,6 +21,7 @@ function isActive($route, $currentUrl)
                 <div class="collapse ps-3" id="submenuAdopciones">
                     <a class="nav-link text-white" href="/petfriend/public/user/publicaciones">Publicar</a>
                     <a class="nav-link text-white" href="/petfriend/public/user/estado">Estado</a>
+
                 </div>
             </li>
             <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/bandeja_mensajes">Mensajes</a></li>
@@ -43,14 +44,26 @@ function isActive($route, $currentUrl)
 </div>
 
 <script>
-    const toggleSidebar = () => {
-        const sidebar = document.getElementById("sidebar");
-        sidebar.classList.toggle("collapsed");
-    }
-
     const mostrarSeccion = (id, event) => {
-        event.preventDefault();
-        document.querySelectorAll('.seccion').forEach(sec => sec.classList.remove('activa'));
-        document.getElementById(id).classList.add('activa');
+        if (event) event.preventDefault();
+
+        // Oculta todas las secciones
+        document.querySelectorAll('.seccion').forEach(sec => {
+            sec.style.display = 'none';
+            sec.classList.remove('activa');
+        });
+
+        // Muestra la sección seleccionada
+        const seccionActiva = document.getElementById(id);
+        if (seccionActiva) {
+            seccionActiva.style.display = 'block';
+            seccionActiva.classList.add('activa');
+        }
+
+        // Actualiza las pestañas activas
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        if (event?.target) {
+            event.target.classList.add('active');
+        }
     }
 </script>

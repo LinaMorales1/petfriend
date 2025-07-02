@@ -16,12 +16,24 @@
                     <input class="form-control mb-2" type="text" name="ciudad" placeholder="Ciudad" required>
                     <input class="form-control mb-2" type="password" name="contrasena" placeholder="Contraseña" required>
                     <input id="confirmar" class="form-control mb-2" type="password" placeholder="Confirmar Contraseña" required>
+
+                    <!-- Selector de rol -->
+                    <select name="rol" class="form-control mb-2">
+                        <option value="usuario" selected>Usuario</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+
+                    <!-- Código secreto solo si se elige admin -->
+                    <input class="form-control mb-2" type="text" name="codigo_admin" placeholder="Código de administrador (solo si es admin)">
+
                     <button class="btn btn-primary w-100" type="submit">REGISTRARSE</button>
                 </form>
+
                 <div class="d-flex justify-content-between mt-2">
                     <p>¿Ya tienes cuenta?</p>
                     <a href="/petfriend/public/auth/login">Iniciar sesión</a>
                 </div>
+
                 <div id="mensaje" class="mt-2"></div>
             </div>
         </div>
@@ -41,7 +53,7 @@
             return;
         }
 
-        $mensaje.text('Cargando...').addClass('text-black');
+        $mensaje.text('Cargando...').removeClass('text-danger text-success').addClass('text-black');
 
         $.ajax({
             url: '/petfriend/public/auth/createUser',

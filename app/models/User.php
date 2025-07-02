@@ -49,24 +49,35 @@ class User extends Model
     }
 
     // Actualiza los datos personales del usuario
-    public function updatePerfil($id, $data)
+    public function actualizarPerfil($id, $nombre, $apellidos, $ciudad, $edad, $correo)
     {
         $stmt = $this->getDB()->prepare("UPDATE usuarios SET NOMBRES = ?, APELLIDOS = ?, CIUDAD = ?, EDAD = ?, CORREO = ? WHERE ID_USUARIO = ?");
-        return $stmt->execute([
-            $data['nombre'],
-            $data['apellidos'],
-            $data['ciudad'],
-            $data['edad'],
-            $data['correo'],
-            $id
-        ]);
+        return $stmt->execute([$nombre, $apellidos, $ciudad, $edad, $correo, $id]);
     }
 
+
+
     // Cambia la contraseña del usuario
+    public function cambiarContrasena($id_usuario, $nueva)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE usuarios SET CONTRASEÑA = ? WHERE ID_USUARIO = ?");
+        return $stmt->execute([$nueva, $id_usuario]);
+    }
+
+    public function actualizarRol($id, $rol)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE usuarios SET ROL = ? WHERE ID_USUARIO = ?");
+        return $stmt->execute([$rol, $id]);
+    }
     public function actualizarPassword($id_usuario, $nueva)
     {
         $stmt = $this->getDB()->prepare("UPDATE usuarios SET CONTRASEÑA = ? WHERE ID_USUARIO = ?");
         return $stmt->execute([$nueva, $id_usuario]);
     }
+    public function getMascotasByUsuario($idUsuario)
+    {
+        $stmt = $this->getDB()->prepare("SELECT ID_MASCOTAS, ESPECIE FROM mascotas WHERE ID_USUARIO_FK = ?");
+        $stmt->execute([$idUsuario]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
-
