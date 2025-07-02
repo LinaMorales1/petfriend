@@ -80,4 +80,26 @@ class User extends Model
         $stmt->execute([$idUsuario]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getmensajesByUsuario($idUsuario)
+    {
+        $emisor_id = $_SESSION['ID_USUARIO'];
+        $receptor_id = $_POST['receptor_id'] ?? null;
+        $contenido = trim($_POST['contenido'] ?? '');
+
+        if ($receptor_id && $contenido) {
+            $stmt =$this->getDB()->prepare("INSERT INTO mensajes (emisor_id, receptor_id, contenido) VALUES (:emisor, :receptor, :contenido)");
+            $stmt->execute([
+                'emisor' => $emisor_id,
+                'receptor' => $receptor_id,
+                'contenido' => $contenido
+            ]);
+            header("Location: ../perfil.php?id=$receptor_id&mensaje_enviado=1");
+            exit();
+        } else {
+            echo "Error: Datos incompletos.";
+        }
+        $stmt = $this->getDB()->prepare("SELECT * FROM mensajes WHERE emisor_id = ? OR receptor_id = ? ORDER BY fecha DESC");
+        $stmt->execute([$idUsuario, $idUsuario]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -242,4 +242,34 @@ class UserController extends Controller
             'title' => 'Configuración - Pet Friend'
         ], 'layouts/user');
     }
+    public function bandeja_mensajes()
+    {
+        $this->validateSession('usuario');
+
+        $mensajeModel = $this->model('Mensaje');
+        $usuarios = $this->model('User')->getAll();
+        $mensajes = $mensajeModel->obtenerMensajes($_SESSION['ID_USUARIO']);
+
+        $this->view('user/bandeja_mensajes', [
+            'mensajes' => $mensajes,
+            'usuarios' => $usuarios,
+            'title' => 'Mis Mensajes'
+        ], 'layouts/user');
+    }
+
+    public function enviar_mensaje()
+    {
+        $this->validateSession('usuario');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $emisorId = $_SESSION['ID_USUARIO'];
+            $receptorId = intval($_POST['receptor_id']);
+            $mensaje = trim($_POST['mensaje']);
+
+            $this->model('Mensaje')->enviar($emisorId, $receptorId, $mensaje);
+        }
+
+        header('Location: /petfriend/public/user/bandeja_mensajes');
+        exit;
+    }
 }
