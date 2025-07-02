@@ -272,4 +272,12 @@ class UserController extends Controller
         header('Location: /petfriend/public/user/bandeja_mensajes');
         exit;
     }
+    public function acerca_terminos()
+    {
+        $this->validateSession('usuario');
+
+        $this->view('user/terminos_condiciones', [
+            'title' => 'Términos y Condiciones - Pet Friend'
+        ], 'layouts/user');
+    }
 }

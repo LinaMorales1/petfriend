@@ -27,7 +27,7 @@ function isActive($route, $currentUrl)
             <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/bandeja_mensajes">Mensajes</a></li>
 
             <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/configuracion">Configuración</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/acerca_terminos">Términos</a></li>
+            <li class="nav-item"><a class="nav-link text-white" href="/petfriend/public/user/terminos_condiciones">Términos</a></li>
             <a class="nav-link text-white" href="/petfriend/public/auth/logout">Cerrar sesión</a>
         </ul>
     </div>
