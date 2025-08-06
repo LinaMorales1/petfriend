@@ -30,9 +30,18 @@ $likesPorPub = $likesPorPub ?? [];
                         <div>
                            Ciudad: <?= htmlspecialchars($pub['CIUDAD']) ?>
                         </div>
+                        <!-- Fecha -->
+                        <div>
+                            Fecha: <?= date('d/m/Y H:i', strtotime($pub['fecha'])) ?>
+                        </div>
+                        <!-- Estado -->
+                        <div></div>
+                            Estado: <span class="badge bg-<?= $pub['estado'] == 'EN CURSO' ? 'success' : ($pub['estado'] == 'CANCELADA' ? 'danger' : 'secondary') ?>">
+                                <?= htmlspecialchars($pub['estado']) ?>
+                            </span>
                         <!-- Imagen -->
                         <?php if (!empty($pub['imagen'])): ?>
-                            <div class="post-image-container">
+                            <div class=>
                                 <img src="/petfriend/public/uploads/posts/<?= htmlspecialchars($pub['imagen']) ?>"
                                     class="post-image adaptive-image"
                                     alt="Imagen publicación">

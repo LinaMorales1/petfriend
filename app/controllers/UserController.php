@@ -208,7 +208,6 @@ class UserController extends Controller
         $estado = $_GET['estado'] ?? 'EN CURSO';
 
         $postModel = $this->model('Post');
-        $postModel->eliminarCompletadas(); // limpia publicaciones con estado COMPLETADA
         $publicaciones = $postModel->getByUserAndEstado($id_usuario, $estado);
 
         $this->view('user/estado_publicaciones', [
@@ -460,5 +459,19 @@ class UserController extends Controller
             header("Location: /petfriend/public/user/estado");
             exit;
         }
+    }
+    public function eliminar_publicacion()
+    {
+        $this->validateSession('usuario');
+
+        $id = $_GET['id'] ?? null;
+        $estado = $_GET['estado'] ?? 'EN CURSO';
+
+        if ($id) {
+            $this->model('Post')->eliminar($id);
+        }
+
+        header("Location: /petfriend/public/user/estado?estado=" . urlencode($estado));
+        exit;
     }
 }

@@ -44,14 +44,13 @@ class Post extends Model
         $db = $this->getDB();
 
         $stmt = $db->prepare("
-            INSERT INTO publicaciones (usuario_id, titulo, contenido, ciudad, imagen, mascota_id)
+            INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen, mascota_id)
             VALUES (?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['usuario_id'],
             $data['titulo'],
             $data['contenido'],
-            $data['ciudad'],
             $data['imagen'],
             $data['mascota_id']
 
@@ -84,11 +83,6 @@ class Post extends Model
         $stmt = $this->getDB()->prepare("SELECT * FROM publicaciones WHERE usuario_id = ? AND estado = ? ORDER BY fecha DESC");
         $stmt->execute([$userId, $estado]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function eliminarCompletadas()
-    {
-        $this->getDB()->query("DELETE FROM publicaciones WHERE estado = 'COMPLETADA'");
     }
 
     public function updateEstado($id, $estado)
@@ -200,26 +194,41 @@ class Post extends Model
     }
 
     public function actualizar($data)
-{
-    $params = [
-        'titulo' => $data['titulo'],
-        'contenido' => $data['contenido'],
-        'id' => $data['id']
-    ];
+    {
+        $params = [
+            'titulo' => $data['titulo'],
+            'contenido' => $data['contenido'],
+            'id' => $data['id']
+        ];
 
-    $sql = "UPDATE publicaciones SET 
+        $sql = "UPDATE publicaciones SET 
                 titulo = :titulo,
                 contenido = :contenido";
 
-    if (!empty($data['imagen'])) {
-        $sql .= ", imagen = :imagen";
-        $params['imagen'] = $data['imagen'];
+        if (!empty($data['imagen'])) {
+            $sql .= ", imagen = :imagen";
+            $params['imagen'] = $data['imagen'];
+        }
+
+        $sql .= " WHERE id = :id";
+
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->execute($params);
     }
+    public function eliminar($id)
+    {
+        $db = $this->getDB();
 
-    $sql .= " WHERE id = :id";
+        // Eliminar reacciones vinculadas
+        $stmt1 = $db->prepare("DELETE FROM reacciones WHERE publicacion_id = ?");
+        $stmt1->execute([$id]);
 
-    $stmt = $this->getDB()->prepare($sql);
-    $stmt->execute($params);
-}
+        // Eliminar comentarios vinculados
+        $stmt2 = $db->prepare("DELETE FROM comentarios WHERE publicacion_id = ?");
+        $stmt2->execute([$id]);
 
+        // Eliminar la publicación
+        $stmt3 = $db->prepare("DELETE FROM publicaciones WHERE id = ?");
+        $stmt3->execute([$id]);
+    }
 }
