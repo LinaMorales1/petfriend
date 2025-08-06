@@ -1,3 +1,5 @@
+
+
 <?php
 //print_r($publicaciones)
 
@@ -13,24 +15,26 @@
                     <h3><?= htmlspecialchars($pub['titulo']) ?></h3>
                 </div>
                 <div class="card-body">
-                    <div class="vstack gap-3">
+                    <div class="vstack gap-4">
                         <div>
                             Creado por: <small class="text-muted">- <?= htmlspecialchars($pub['NOMBRES']) . ' ' . htmlspecialchars($pub['APELLIDOS']) ?></small>
                         </div>
                         <div>
                             Contenido: <?= nl2br(htmlspecialchars($pub['contenido'])) ?>
                         </div>
-                        <div style="height: 300px;">
+                        <div style="">
                             <img src="/petfriend/public/uploads/posts/<?= htmlspecialchars($pub['imagen']) ?>" class="object-fit-cover border rounded w-100 h-100" alt="Imagen publicación">
                         </div>
                     </div>
-                    <div>
+                    <div> 
+                     <a href="/petfriend/public/user/bandeja_mensajes" class="btn btn-primary">MENSAJE</a>
+
 
                     </div>
                 </div>
             </div>
 
-            <!-- <div class="reactions mt-2">
+             <div class="reactions mt-2">
                 <a href="?like=<?= $pub['id'] ?>" class="btn btn-outline-primary btn-sm">👍 Me gusta (<?= $likesPorPub[$pub['id']] ?? 0 ?>)</a>
             </div>
 
@@ -52,7 +56,7 @@
                         </div>
                     </form>
                 </div>
-            </div> -->
+            </div> 
         </div>
     <?php endforeach; ?>
 </div>

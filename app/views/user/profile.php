@@ -30,20 +30,6 @@ $foto = !empty($usuario['FOTO'])
         </form>
     </div>
 
-    <!-- Enviar mensaje -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">✉️ Enviar mensaje a <?= htmlspecialchars($usuario['NOMBRES']) ?></h5>
-            <form action="enviar_mensaje.php" method="POST">
-                <!-- <input type="hidden" name="receptor_id" value="<?= $usuario['ID_USUARIO'] ?>"> -->
-                <div class="mb-2">
-                    <textarea name="contenido" class="form-control" rows="3" placeholder="Escribe tu mensaje aquí..." required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Enviar mensaje</button>
-            </form>
-        </div>
-    </div>
-
     <!-- Publicaciones -->
     <?php if (empty($publicaciones)): ?>
         <div class="alert alert-info">No tienes publicaciones activas.</div>

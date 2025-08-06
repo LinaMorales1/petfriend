@@ -24,3 +24,17 @@ class Mensaje extends Model
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+$receptor_id = $_GET['receptor'] ?? null;
+if ($receptor_id) {
+    $mensaje = new Mensaje();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $emisor_id = $_SESSION['user_id']; // Asumiendo que el ID del usuario está en la sesión
+        $contenido = $_POST['mensaje'] ?? '';
+        if (!empty($contenido)) {
+            $mensaje->enviar($emisor_id, $receptor_id, $contenido);
+            header("Location: /petfriend/public/mensajes?receptor=$receptor_id");
+            exit;
+        }
+    }
+    $mensajes = $mensaje->obtenerMensajes($_SESSION['user_id']);
+}

@@ -23,9 +23,10 @@
       <div class="row">
         <?php foreach ($publicaciones as $pub): ?>
           <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card shadow-sm">
+            <div class="card shadow">
               <?php if (!empty($pub['imagen'])): ?>
-                <img src="../uploads/<?= htmlspecialchars($pub['imagen']) ?>" class="card-img-top" alt="Imagen">
+               <img src="/petfriend/uploads/posts<?= htmlspecialchars($pub['imagen']) ?>" class="card-img-top img-fluid rounded" alt="Imagen">
+
               <?php endif; ?>
               <div class="card-body">
                 <h5 class="card-title"><?= htmlspecialchars($pub['titulo']) ?></h5>
