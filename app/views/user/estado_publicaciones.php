@@ -39,8 +39,11 @@
                     <option <?= $pub['estado'] == 'COMPLETADA' ? 'selected' : '' ?>>COMPLETADA</option>
                   </select>
                   <button type="submit" class="btn btn-outline-primary btn-sm">Actualizar</button>
+
                 </form>
                 <a href="/petfriend/public/users?delete=<?= $pub['id'] ?>&estado=<?= urlencode(is_array($estado) ? ($estado[0] ?? '') : $estado) ?>" class="btn btn-outline-danger btn-sm mt-2" onclick="return confirm('¿Eliminar esta publicación?')">🗑 Eliminar</a>
+                <a href="/petfriend/public/user/editar_publicacion?id=<?= $pub['id'] ?>" class="btn btn-warning btn-sm">✏️ Editar</a>
+
               </div>
             </div>
           </div>

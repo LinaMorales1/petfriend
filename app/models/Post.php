@@ -35,7 +35,7 @@ class Post extends Model
 
     public function getAll()
     {
-        $stmt = $this->getDB()->query("SELECT p.*, u.NOMBRES, u.APELLIDOS FROM publicaciones p JOIN usuarios u ON p.usuario_id = u.ID_USUARIO ORDER BY p.fecha DESC");
+        $stmt = $this->getDB()->query("SELECT p.*, u.NOMBRES, u.APELLIDOS, u.CIUDAD FROM publicaciones p JOIN usuarios u ON p.usuario_id = u.ID_USUARIO ORDER BY p.fecha DESC");
         return $stmt->fetchAll();
     }
 
@@ -44,15 +44,17 @@ class Post extends Model
         $db = $this->getDB();
 
         $stmt = $db->prepare("
-            INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen, mascota_id)
+            INSERT INTO publicaciones (usuario_id, titulo, contenido, ciudad, imagen, mascota_id)
             VALUES (?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['usuario_id'],
             $data['titulo'],
             $data['contenido'],
+            $data['ciudad'],
             $data['imagen'],
             $data['mascota_id']
+
         ]);
 
         $data['id'] = $db->lastInsertId();
@@ -97,13 +99,14 @@ class Post extends Model
 
     public function getAllWithUser()
     {
-        $sql = "SELECT p.*, u.NOMBRES, u.APELLIDOS 
+        $sql = "SELECT p.*, u.NOMBRES, u.APELLIDOS, u.CIUDAD
             FROM publicaciones p
             JOIN usuarios u ON p.usuario_id = u.ID_USUARIO
             ORDER BY p.id DESC";
 
         return $this->getDB()->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     public function actualizarEstado($id, $estado)
     {
@@ -195,4 +198,28 @@ class Post extends Model
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+
+    public function actualizar($data)
+{
+    $params = [
+        'titulo' => $data['titulo'],
+        'contenido' => $data['contenido'],
+        'id' => $data['id']
+    ];
+
+    $sql = "UPDATE publicaciones SET 
+                titulo = :titulo,
+                contenido = :contenido";
+
+    if (!empty($data['imagen'])) {
+        $sql .= ", imagen = :imagen";
+        $params['imagen'] = $data['imagen'];
+    }
+
+    $sql .= " WHERE id = :id";
+
+    $stmt = $this->getDB()->prepare($sql);
+    $stmt->execute($params);
+}
+
 }

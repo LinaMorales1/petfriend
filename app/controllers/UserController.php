@@ -135,7 +135,7 @@ class UserController extends Controller
                 $contenido = trim($_POST['contenido'] ?? '');
                 $mascotaId = intval($_POST['mascota_id'] ?? 0);
                 $usuarioId = $_SESSION['ID_USUARIO'];
-                $ciudad = $_SESSION['CIUDAD'] ?? 'Desconocida';
+                $ciudad = $_SESSION['CIUDAD'] ?? '';
                 $imagenNombre = null;
 
                 // 🔍 Validaciones
@@ -407,6 +407,58 @@ class UserController extends Controller
             echo "ok";
         } else {
             echo "error";
+        }
+    }
+    public function editar_publicacion()
+    {
+        $this->validateSession('usuario');
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            echo "ID inválido.";
+            return;
+        }
+
+        $postModel = $this->model('Post');
+        $publicacion = $postModel->getById($id);
+
+        if (!$publicacion) {
+            echo "Publicación no encontrada.";
+            return;
+        }
+
+        $this->view('user/editar_publicacion', [
+            'publicacion' => $publicacion,
+            'title' => 'Editar publicación'
+        ], 'layouts/user');
+    }
+    public function actualizar_publicacion()
+    {
+        $this->validateSession('usuario');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = intval($_POST['id']);
+            $titulo = trim($_POST['titulo']);
+            $contenido = trim($_POST['contenido']);
+            $imagenNombre = null;
+
+            if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === 0) {
+                $ext = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+                $imagenNombre = uniqid('post_') . '.' . $ext;
+                move_uploaded_file($_FILES['imagen']['tmp_name'], "../public/uploads/posts/" . $imagenNombre);
+            }
+
+            $postModel = $this->model('Post');
+
+            $postModel->actualizar([
+                'id' => $id,
+                'titulo' => $titulo,
+                'contenido' => $contenido,
+                'imagen' => $imagenNombre // puede ser null
+            ]);
+
+            header("Location: /petfriend/public/user/estado");
+            exit;
         }
     }
 }

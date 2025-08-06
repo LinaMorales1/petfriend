@@ -5,7 +5,7 @@ class User extends Model
     public function getAll()
     {
         $stmt = $this->getDB()->query("SELECT * FROM usuarios");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // Crear un nuevo usuario

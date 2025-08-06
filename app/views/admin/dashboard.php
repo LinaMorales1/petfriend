@@ -96,7 +96,7 @@
                             <td><?= htmlspecialchars($u['CORREO']) ?></td>
                             <td><?= htmlspecialchars($u['EDAD']) ?></td>
                             <td><?= htmlspecialchars($u['CELULAR']) ?></td>
-                            <td><?= htmlspecialchars($u['CIUDAD']) ?></td>
+                            <td><?= htmlspecialchars($u['CIUDAD'] ?? 'Ciudad desconocida') ?></td>
                             <td><?= htmlspecialchars($u['IDENTIFICACION']) ?></td>
                             <td>
                                 <form method="POST" action="/petfriend/public/admin/actualizarRol" class="d-flex">
@@ -215,6 +215,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    
                     <?php foreach ($adopciones as $a): ?>
                         <?php
                         $badge = match ($a['ESTADO']) {

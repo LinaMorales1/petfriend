@@ -28,7 +28,7 @@ $likesPorPub = $likesPorPub ?? [];
                             Contenido: <?= nl2br(htmlspecialchars($pub['contenido'])) ?>
                         </div>
                         <div>
-                            Ciudad: <?= nl2br(htmlspecialchars($pub['ciudad'])) ?>
+                           Ciudad: <?= htmlspecialchars($pub['CIUDAD']) ?>
                         </div>
                         <!-- Imagen -->
                         <?php if (!empty($pub['imagen'])): ?>
