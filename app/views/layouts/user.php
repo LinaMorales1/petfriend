@@ -1,4 +1,3 @@
-
 <?php
 function isActive($route, $currentUrl)
 {
@@ -68,3 +67,5 @@ function isActive($route, $currentUrl)
         }
     }
 </script>
+
+<script src="/petfriend/public/js/dashboard.js"></script>

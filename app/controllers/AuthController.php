@@ -4,19 +4,20 @@ class AuthController extends Controller
     public function login()
     {
         $this->redirectIfLoggedIn();
-
         $this->view('auth/login', ['title' => 'Iniciar sesión']);
     }
 
     public function register()
     {
         $this->redirectIfLoggedIn();
-
         $this->view('auth/register', ['title' => 'Registrarse']);
     }
 
     public function createUser()
     {
+        ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'nombre'     => $_POST['nombre'] ?? '',
@@ -25,17 +26,22 @@ class AuthController extends Controller
                 'edad'       => $_POST['edad'] ?? '',
                 'documento'  => $_POST['documento'] ?? '',
                 'ciudad'     => $_POST['ciudad'] ?? '',
+                'celular'    => $_POST['celular'] ?? '',
                 'contrasena' => $_POST['contrasena'] ?? '',
+                'rol'        => $_POST['rol'] ?? 'usuario',
             ];
 
-            // Asignar rol por lógica de backend
-            $data['rol'] = $_POST['rol'] ?? 'usuario';
+            // Validar código de administrador si aplica
+            if ($data['rol'] === 'admin' && ($_POST['codigo_admin'] ?? '') !== 'CLAVE123') {
+                echo json_encode(['success' => false, 'message' => 'Código de administrador incorrecto']);
+                exit;
+            }
 
             // Validación básica
             foreach ($data as $campo => $valor) {
                 if (empty($valor)) {
-                    echo json_encode(['success' => false, 'message' => "Campo '$campo' es obligatorio"]);
-                    return;
+                    echo json_encode(['success' => false, 'message' => "Campo '\$campo' es obligatorio"]);
+                    exit;
                 }
             }
 
@@ -48,37 +54,41 @@ class AuthController extends Controller
 
             if ($resultado) {
                 echo json_encode(['success' => true, 'message' => 'Registro exitoso. Serás redirigido para iniciar sesión.']);
+                exit;
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al registrar usuario']);
+                exit;
             }
         } else {
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
         }
     }
 
     public function loginUser()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $correo = $_POST['correo'] ?? '';
-            $contrasena = $_POST['contrasena'] ?? '';
+            // Obtener y limpiar los datos del formulario
+            $correo = trim($_POST['correo'] ?? '');
+            $contrasena = trim($_POST['contrasena'] ?? '');
 
+            // Validar que se ingresaron ambos campos
             if (empty($correo) || empty($contrasena)) {
                 echo json_encode(['success' => false, 'message' => 'Correo y contraseña requeridos']);
                 return;
             }
 
+            // Buscar el usuario por correo
             $userModel = $this->model('User');
             $usuario = $userModel->findByCorreo($correo);
-            // Verificar si el usuario existe y la contraseña es correcta
-            // Si no existe, devolver error
-            $contrasena = trim($contrasena);
 
+            // Verificar si existe el usuario y si la contraseña coincide
             if (!$usuario || !password_verify($contrasena, $usuario['CONTRASEÑA'])) {
                 echo json_encode(['success' => false, 'message' => 'Correo o contraseña incorrectos']);
                 return;
             }
 
-            // Iniciar sesión
+            // Iniciar la sesión y guardar los datos del usuario
             session_start();
             $_SESSION['ID_USUARIO'] = $usuario['ID_USUARIO'];
             $_SESSION['NOMBRE'] = $usuario['NOMBRES'];
@@ -89,6 +99,7 @@ class AuthController extends Controller
             echo json_encode(['success' => false, 'message' => 'Método no permitido']);
         }
     }
+
 
     public function logout()
     {

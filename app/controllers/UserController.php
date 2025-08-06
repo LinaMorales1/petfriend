@@ -1,18 +1,101 @@
 <?php
+
 class UserController extends Controller
 {
     public function index()
     {
         $this->validateSession('usuario');
         $postModel = $this->model('Post');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comentario'])) {
+            $comentario = trim($_POST['comentario']);
+            $publicacionId = intval($_POST['publicacion_id']);
+            $usuarioId = $_SESSION['ID_USUARIO'];
+
+            if (!empty($comentario)) {
+                $postModel->guardarComentario($usuarioId, $publicacionId, $comentario);
+            }
+
+            header("Location: /petfriend/public/user");
+            exit;
+        }
+
         $posts = $postModel->getAll();
+
+        $comentariosPorPub = [];
+        $likesPorPub = [];
+
+        foreach ($posts as $post) {
+            $comentariosPorPub[$post['id']] = $postModel->obtenerComentarios($post['id']);
+            $likesPorPub[$post['id']] = $postModel->contarLikes($post['id']);
+        }
 
         $this->view('user/dashboard', [
             'title' => 'Inicio - Pet Friend',
             'publicaciones' => $posts,
+            'comentariosPorPub' => $comentariosPorPub,
+            'likesPorPub' => $likesPorPub,
         ], 'layouts/user');
     }
 
+    public function likeAjax()
+    {
+        $this->validateSession('usuario');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idUsuario = $_SESSION['ID_USUARIO'];
+            $idPublicacion = intval($_POST['publicacion_id'] ?? 0);
+
+            if (!$idPublicacion) {
+                echo json_encode(['success' => false, 'message' => 'ID inválido']);
+                return;
+            }
+
+            $postModel = $this->model('Post');
+
+            if ($postModel->usuarioDioLike($idUsuario, $idPublicacion)) {
+                $postModel->quitarLike($idUsuario, $idPublicacion);
+                $action = 'dislike';
+            } else {
+                $postModel->darLike($idUsuario, $idPublicacion);
+                $action = 'like';
+            }
+
+            $totalLikes = $postModel->contarLikes($idPublicacion);
+
+            echo json_encode([
+                'success' => true,
+                'action' => $action,
+                'likes' => $totalLikes
+            ]);
+        }
+    }
+
+    public function comentarAjax()
+    {
+        $this->validateSession('usuario');
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $idUsuario = $_SESSION['ID_USUARIO'];
+            $idPublicacion = intval($_POST['publicacion_id'] ?? 0);
+            $comentario = trim($_POST['comentario'] ?? '');
+
+            if ($idPublicacion && $comentario) {
+                $postModel = $this->model('Post');
+                $postModel->guardarComentario($idUsuario, $idPublicacion, $comentario);
+                $comentarios = $postModel->obtenerComentarios($idPublicacion);
+
+                echo json_encode([
+                    'success' => true,
+                    'comentarios' => $comentarios
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Comentario inválido']);
+            }
+        }
+    }
     public function profile()
     {
         $this->validateSession('usuario');
@@ -40,8 +123,6 @@ class UserController extends Controller
             'mascotas' => $mascotas
         ], 'layouts/user');
     }
-
-
 
     public function create()
     {
@@ -137,7 +218,6 @@ class UserController extends Controller
         ], 'layouts/user');
     }
 
-
     public function actualizarEstado()
     {
         $this->validateSession('usuario');
@@ -182,36 +262,42 @@ class UserController extends Controller
         ], 'layouts/user');
     }
 
-    public function actualizarPerfil()
+    public function updatePhoto()
     {
-        $this->validateSession('usuario');
-
-        $userModel = $this->model('User');
-        $user = $userModel->getById($_SESSION['ID_USUARIO']);
-        $mensaje = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actualizar_perfil'])) {
-            $id = $_SESSION['ID_USUARIO'];
-            $nombre = trim($_POST['nombre']);
-            $apellidos = trim($_POST['apellidos']);
-            $ciudad = trim($_POST['ciudad']);
-            $edad = intval($_POST['edad']);
-            $correo = trim($_POST['correo']);
-
-            if ($nombre && $apellidos && $correo) {
-                $userModel->actualizarPerfil($id, $nombre, $apellidos, $ciudad, $edad, $correo);
-                $mensaje = "✅ Perfil actualizado correctamente.";
-                $user = $userModel->getById($_SESSION['ID_USUARIO']);
-            } else {
-                $mensaje = "❌ Por favor completa todos los campos obligatorios.";
-            }
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
-        $this->view('user/configuracion', [
-            'usuario' => $user,
-            'mensaje' => $mensaje,
-            'title' => 'Configuración - Pet Friend'
-        ], 'layouts/user');
+        if (!isset($_SESSION['ID_USUARIO'])) {
+            echo "Error: Usuario no autenticado.";
+            return;
+        }
+
+        $usuarioId = $_SESSION['ID_USUARIO'];
+        $foto = $_FILES['nueva_foto'] ?? null;
+
+        if ($foto && $foto['error'] === UPLOAD_ERR_OK) {
+            $extension = pathinfo($foto['name'], PATHINFO_EXTENSION);
+            $nombreArchivo = 'perfil_' . uniqid() . '.' . $extension;
+
+            $carpeta = __DIR__ . '/../../public/uploads/perfiles/';
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0777, true);
+            }
+
+            $rutaDestino = $carpeta . $nombreArchivo;
+
+            if (move_uploaded_file($foto['tmp_name'], $rutaDestino)) {
+                $userModel = $this->model('User');
+                $userModel->updateFoto($usuarioId, $nombreArchivo);
+
+                echo 'ok:' . $nombreArchivo;
+            } else {
+                echo "Error al mover la imagen.";
+            }
+        } else {
+            echo "No se recibió la imagen correctamente.";
+        }
     }
 
     public function cambiarContrasena()
@@ -242,6 +328,7 @@ class UserController extends Controller
             'title' => 'Configuración - Pet Friend'
         ], 'layouts/user');
     }
+
     public function bandeja_mensajes()
     {
         $this->validateSession('usuario');
@@ -272,6 +359,7 @@ class UserController extends Controller
         header('Location: /petfriend/public/user/bandeja_mensajes');
         exit;
     }
+
     public function acerca_terminos()
     {
         $this->validateSession('usuario');
@@ -279,5 +367,46 @@ class UserController extends Controller
         $this->view('user/terminos_condiciones', [
             'title' => 'Términos y Condiciones - Pet Friend'
         ], 'layouts/user');
+    }
+
+    public function like()
+    {
+        $this->validateSession('usuario');
+
+        if (!isset($_GET['like'])) {
+            echo "ID de publicación no proporcionado";
+            return;
+        }
+
+        $idPublicacion = intval($_GET['like']);
+        $idUsuario = $_SESSION['ID_USUARIO'];
+
+        $postModel = $this->model('Post');
+
+        // Verifica si ya dio like
+        if ($postModel->usuarioDioLike($idUsuario, $idPublicacion)) {
+            $postModel->quitarLike($idUsuario, $idPublicacion);
+        } else {
+            $postModel->darLike($idUsuario, $idPublicacion);
+        }
+
+        header('Location: /petfriend/public/user');
+        exit;
+    }
+    public function updateBiography()
+    {
+        $this->validateSession('usuario');
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['ID_USUARIO'])) {
+            $biografia = trim($_POST['biografia'] ?? '');
+            $idUsuario = $_SESSION['ID_USUARIO'];
+
+            $userModel = $this->model('User');
+            $userModel->updateBiografia($idUsuario, $biografia);
+
+            echo "ok";
+        } else {
+            echo "error";
+        }
     }
 }

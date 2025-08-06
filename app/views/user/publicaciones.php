@@ -13,6 +13,10 @@
           <input type="file" name="imagen" id="imagen" class="form-control" accept="image/*">
       </div>
       <div class="mb-3">
+          <label for="ciudad" class="form-label">Ciudad</label>
+          <textarea name="ciudad" id="ciudad" class="form-control" rows="2" required></textarea>
+      </div>
+      <div class="mb-3">
           <label for="mascota_id" class="form-label">Selecciona una mascota</label>
           <select name="mascota_id" id="mascota_id" class="form-select" required>
               <option value="">-- Selecciona una mascota --</option>

@@ -5,45 +5,85 @@ $foto = !empty($usuario['FOTO'])
 ?>
 
 <div class="card mb-4 shadow-sm">
-    <div class="card-body d-flex align-items-center">
-        <img id="fotoPerfil" src="<?= $foto ?>" alt="Foto de perfil" class="rounded-circle me-4" style="width: 100px; height: 100px; object-fit: cover;">
-        <div>
-            <h4 class="mb-1"><?= htmlspecialchars($usuario['NOMBRES'] . ' ' . $usuario['APELLIDOS']) ?></h4>
-            <p class="mb-1 text-muted">Correo: <?= htmlspecialchars($usuario['CORREO']) ?></p>
-            <p class="mb-1 text-muted">Edad: <?= htmlspecialchars($usuario['EDAD']) ?> años</p>
-            <p class="mb-1 text-muted">Ciudad: <?= htmlspecialchars($usuario['CIUDAD']) ?></p>
-            <p class="mb-1 text-muted">Identificación: <?= htmlspecialchars($usuario['IDENTIFICACION']) ?></p>
-            <form id="formFoto" enctype="multipart/form-data" class="mt-2">
-                <input type="file" name="nueva_foto" class="form-control form-control-sm mb-2" accept="image/*" required>
-                <button type="submit" class="btn btn-sm btn-outline-primary">Actualizar foto</button>
-            </form>
-            <div id="mensajeFoto" class="mt-2 text-muted"></div>
+    <div class="card-body">
+        <div class="row align-items-center text-center text-md-start">
+            <!-- Foto de perfil -->
+            <div class="col-12 col-md-3 mb-3 mb-md-0 d-flex justify-content-center">
+                <img id="fotoPerfil" src="<?= $foto ?>" alt="Foto de perfil"
+                    class="rounded-circle border shadow-sm"
+                    style="width: 120px; height: 120px; object-fit: cover;">
+            </div>
+
+            <!-- Info usuario + formulario -->
+            <div class="col-12 col-md-9">
+                <h4 class="fw-bold mb-2"><?= htmlspecialchars($usuario['NOMBRES'] . ' ' . $usuario['APELLIDOS']) ?></h4>
+                <p class="mb-1"><strong>Correo:</strong> <?= htmlspecialchars($usuario['CORREO']) ?></p>
+                <p class="mb-1"><strong>Edad:</strong> <?= htmlspecialchars($usuario['EDAD']) ?> años</p>
+                <p class="mb-1"><strong>Ciudad:</strong> <?= htmlspecialchars($usuario['CIUDAD']) ?></p>
+                <p class="mb-2"><strong>Identificación:</strong> <?= htmlspecialchars($usuario['IDENTIFICACION']) ?></p>
+
+                <!-- Formulario actualizar foto -->
+                <form id="formFoto" enctype="multipart/form-data" class="d-md-flex align-items-center gap-2">
+                    <input type="file" name="nueva_foto" class="form-control form-control-sm" accept="image/*" required>
+                    <button type="submit" class="btn btn-sm btn-outline-primary mt-2 mt-md-0">Actualizar foto</button>
+                </form>
+
+                <div id="mensajeFoto" class="mt-2 text-muted small"></div>
+            </div>
         </div>
     </div>
-
-    <!-- Biografía -->
-    <div class="bio-box my-4">
-        <h5>Biografía</h5>
-        <form method="POST">
-            <textarea name="biografia" rows="3" class="form-control mb-2"><?= htmlspecialchars($usuario['biografia'] ?? '') ?></textarea>
-            <button type="submit" class="btn btn-sm btn-success">Guardar biografía</button>
-        </form>
-    </div>
-
-    <!-- Publicaciones -->
-    <?php if (empty($publicaciones)): ?>
-        <div class="alert alert-info">No tienes publicaciones activas.</div>
-    <?php else: ?>
-        <div class="list-group">
-            <?php foreach ($publicaciones as $post): ?>
-                <div class="list-group-item mb-2 shadow-sm">
-                    <h5 class="mb-1"><?= htmlspecialchars($post['titulo']) ?></h5>
-                    <p class="mb-1"><?= nl2br(htmlspecialchars($post['contenido'])) ?></p>
-                    <small class="text-muted">Fecha: <?= htmlspecialchars($post['fecha']) ?> | Estado: <?= htmlspecialchars($post['estado']) ?></small>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
 </div>
+
+<!-- Biografía -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">📝 Biografía</h5>
+
+        <form id="formBiografia">
+            <textarea name="biografia" class="form-control mb-3" rows="4"
+                placeholder="Escribe algo sobre ti..."><?= htmlspecialchars($usuario['biografia'] ?? '') ?></textarea>
+
+            <button type="submit" class="btn btn-success">
+                💾 Guardar biografía
+            </button>
+        </form>
+
+        <div id="mensajeBiografia" class="mt-2 text-muted small"></div>
+    </div>
+</div>
+
+<!-- Publicaciones -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">📢 Tus Publicaciones Activas</h5>
+
+        <?php if (!empty($publicaciones)): ?>
+            <div class="row">
+                <?php foreach ($publicaciones as $post): ?>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <?php if ($post['imagen']): ?>
+                                <img src="/petfriend/public/uploads/posts/<?= htmlspecialchars($post['imagen']) ?>"
+                                    class="card-img-top" alt="Imagen publicación"
+                                    style="height: 180px; object-fit: cover;">
+                            <?php endif; ?>
+
+                            <div class="card-body">
+                                <h6 class="card-title"><?= htmlspecialchars($post['titulo']) ?></h6>
+                                <p class="card-text text-truncate"><?= htmlspecialchars($post['contenido']) ?></p>
+                                <p class="text-muted small mb-0">
+                                    Estado: <strong><?= htmlspecialchars($post['estado']) ?></strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info">No tienes publicaciones activas.</div>
+        <?php endif; ?>
+    </div>
+</div>
+
 
 <script src="/petfriend/public/js/profile.js"></script>

@@ -3,11 +3,11 @@
 // Modelo que gestiona las operaciones sobre la tabla "publicaciones"
 class Post extends Model
 {
-    // Obtiene publicaciones de un usuario por estado específico, excluyendo un estado, o sin filtro de estado
+    // ===================== PUBLICACIONES =====================
+
     public function getByUser($userId, $status = null, $excludeStatus = null)
     {
         if ($status) {
-            // Si se pasa un estado, filtra solo por ese estado
             $stmt = $this->getDB()->prepare("
                 SELECT * FROM publicaciones
                 WHERE usuario_id = ? AND estado = ?
@@ -15,7 +15,6 @@ class Post extends Model
             ");
             $stmt->execute([$userId, $status]);
         } elseif ($excludeStatus) {
-            // Si se indica un estado a excluir, trae todos menos ese
             $stmt = $this->getDB()->prepare("
                 SELECT * FROM publicaciones
                 WHERE usuario_id = ? AND estado != ?
@@ -23,7 +22,6 @@ class Post extends Model
             ");
             $stmt->execute([$userId, $excludeStatus]);
         } else {
-            // Si no se filtra, trae todas las publicaciones del usuario
             $stmt = $this->getDB()->prepare("
                 SELECT * FROM publicaciones
                 WHERE usuario_id = ?
@@ -35,23 +33,20 @@ class Post extends Model
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Obtiene todas las publicaciones con nombre del autor
     public function getAll()
     {
         $stmt = $this->getDB()->query("SELECT p.*, u.NOMBRES, u.APELLIDOS FROM publicaciones p JOIN usuarios u ON p.usuario_id = u.ID_USUARIO ORDER BY p.fecha DESC");
         return $stmt->fetchAll();
     }
 
-    // Crea una nueva publicación en la base de datos
     public function create($data)
     {
         $db = $this->getDB();
 
         $stmt = $db->prepare("
-        INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen, mascota_id)
-        VALUES (?, ?, ?, ?, ?)
-
-    ");
+            INSERT INTO publicaciones (usuario_id, titulo, contenido, imagen, mascota_id)
+            VALUES (?, ?, ?, ?, ?)
+        ");
         $stmt->execute([
             $data['usuario_id'],
             $data['titulo'],
@@ -60,20 +55,14 @@ class Post extends Model
             $data['mascota_id']
         ]);
 
-
-        // Retorna los datos de la publicación incluyendo su ID generado
         $data['id'] = $db->lastInsertId();
 
         return $data;
     }
 
-
-    // Actualiza título, contenido e imagen de una publicación existente
     public function update($id, $data)
     {
-        $db = $this->getDB();
-
-        $stmt = $db->prepare("
+        $stmt = $this->getDB()->prepare("
             UPDATE publicaciones
             SET titulo = ?, contenido = ?, imagen = ?
             WHERE id = ?
@@ -88,7 +77,6 @@ class Post extends Model
         return $stmt->rowCount();
     }
 
-    // Obtiene publicaciones de un usuario por un estado específico
     public function getByUserAndEstado($userId, $estado)
     {
         $stmt = $this->getDB()->prepare("SELECT * FROM publicaciones WHERE usuario_id = ? AND estado = ? ORDER BY fecha DESC");
@@ -96,13 +84,11 @@ class Post extends Model
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Elimina todas las publicaciones con estado 'COMPLETADA'
     public function eliminarCompletadas()
     {
         $this->getDB()->query("DELETE FROM publicaciones WHERE estado = 'COMPLETADA'");
     }
 
-    // Actualiza el estado de una publicación (usado desde el formulario de estado)
     public function updateEstado($id, $estado)
     {
         $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
@@ -124,16 +110,89 @@ class Post extends Model
         $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE id = ?");
         return $stmt->execute([$estado, $id]);
     }
+
     public function getById($id)
     {
         $stmt = $this->getDB()->prepare("SELECT * FROM publicaciones WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    public function updateEstadoByMascota($mascotaId, $estado)
-{
-    $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE mascota_id = ?");
-    return $stmt->execute([$estado, $mascotaId]);
-}
 
+    public function updateEstadoByMascota($mascotaId, $estado)
+    {
+        $stmt = $this->getDB()->prepare("UPDATE publicaciones SET estado = ? WHERE mascota_id = ?");
+        return $stmt->execute([$estado, $mascotaId]);
+    }
+
+    // ===================== COMENTARIOS =====================
+
+    public function guardarComentario($usuarioId, $publicacionId, $contenido)
+    {
+        $sql = "INSERT INTO comentarios (usuario_id, publicacion_id, contenido) VALUES (:usuario_id, :publicacion_id, :contenido)";
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        $stmt->bindParam(':contenido', $contenido);
+        return $stmt->execute();
+    }
+
+    public function obtenerComentarios($publicacionId)
+    {
+        $sql = "SELECT c.*, u.NOMBRES 
+        FROM comentarios c
+        JOIN usuarios u ON c.usuario_id = u.ID_USUARIO
+        WHERE c.publicacion_id = :publicacion_id
+        ORDER BY c.id ASC"; // 👈 corregido
+
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function contarComentarios($publicacionId)
+    {
+        $stmt = $this->getDB()->prepare("SELECT COUNT(*) FROM comentarios WHERE publicacion_id = ?");
+        $stmt->execute([$publicacionId]);
+        return $stmt->fetchColumn();
+    }
+
+    // ===================== REACCIONES (LIKES) =====================
+
+    public function darLike($usuarioId, $publicacionId)
+    {
+        $sql = "INSERT INTO reacciones (usuario_id, publicacion_id) VALUES (:usuario_id, :publicacion_id)";
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        return $stmt->execute();
+    }
+
+    public function quitarLike($usuarioId, $publicacionId)
+    {
+        $sql = "DELETE FROM reacciones WHERE usuario_id = :usuario_id AND publicacion_id = :publicacion_id";
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        return $stmt->execute();
+    }
+
+    public function usuarioDioLike($usuarioId, $publicacionId)
+    {
+        $sql = "SELECT COUNT(*) FROM reacciones WHERE usuario_id = :usuario_id AND publicacion_id = :publicacion_id";
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':usuario_id', $usuarioId);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        $stmt->execute();
+        return $stmt->fetchColumn() > 0;
+    }
+
+    public function contarLikes($publicacionId)
+    {
+        $sql = "SELECT COUNT(*) FROM reacciones WHERE publicacion_id = :publicacion_id";
+        $stmt = $this->getDB()->prepare($sql);
+        $stmt->bindParam(':publicacion_id', $publicacionId);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
 }
